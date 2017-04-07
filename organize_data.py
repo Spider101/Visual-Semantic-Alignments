@@ -4,8 +4,8 @@ from os.path import join, exists
 import argparse
 import pdb
 
-from config.resources import (data_path, VG_REG_FNAME, COCO_FNAME,
-                                VG_IMG_FNAME, PARA_FNAME)
+from config.resources import (data_path, VG_REG_FNAME, VG_IMG_FNAME,
+                                PARA_FNAME)
 
 def align_datasets(d1, d2):
 
