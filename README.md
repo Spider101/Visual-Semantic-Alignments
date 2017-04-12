@@ -4,7 +4,7 @@ This repository is an exploration into the possibility of generating multi-sente
 
 ## Dataset
 
-We will be combining information from the [Visual Genome dataset](http://visualgenome.org) and the dataset built as part of the [A Hierarchical Approach for Generating Descriptive Image Paragraphs](https://arxiv.org/pdf/1611.06607.pdf). To be more precise, we will be utilizing the bounding boxes and corresponding region descriptions from the former and the paragraph captions from the latter.
+We will be combining information from the [Visual Genome dataset](http://visualgenome.org) and the dataset built as part of the [A Hierarchical Approach for Generating Descriptive Image Paragraphs](https://arxiv.org/pdf/1611.06607.pdf). To be more precise, we will be utilizing the bounding boxes and corresponding region descriptions from the former and the paragraph captions from the latter. This combined dataset will be a list of objects (19561) each having the following structure: `{"id" : int , "url": str, "paragraph": str , "regions": []}`. The *regions* key has a list of regions corresponding to that image in the following format: `{"image_id": "region_id": int, "x": int, "y": int, "height": int, "width": int, "phrase": str}`
 
 ## Prerequisites
 
