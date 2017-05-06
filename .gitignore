@@ -1,2 +1,6 @@
-data/*
-config/*
+data/
+skip_thoughts/
+config/
+__pycache__/
+decoder_train.py
+*pyc
