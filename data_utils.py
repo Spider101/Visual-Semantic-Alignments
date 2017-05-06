@@ -17,6 +17,7 @@ import pdb
 from skip_thoughts import skipthoughts
 from model_utils import encode_text
 from config.resources import data_path, METADICT_FNAME
+from utils import load_pkl, dump_pkl
 
 '''define sentence encoder and load it with pretrained weights'''
 def build_sent_encoder():
@@ -53,10 +54,12 @@ def build_text_dataset(metadata):
                 pdb.set_trace()
 
             caption = regions[reg_idx]["phrase"]
-            captions.append(regions[reg_idx]["phrase"])
+            
+            #safety check to prevent blank strings being passed to the encoder
+            if caption.replace(" ", "") == "":
+                caption = "\b"
 
-        if idx == 8878:
-            pdb.set_trace()
+            captions.append(caption)
 
         sent_feats = encode_text(text_encoder, captions)
 
@@ -89,6 +92,5 @@ if __name__ == "__main__":
                 meta_dict = json.load(f)
             
             text_dataset = build_text_dataset(meta_dict)
-
-            with open(join(data_path, "text_data.json")) as f:
-                json.dump(text_dataset, f)
+            
+            dump_pkl(text_dataset, data_path, "text_feats")
