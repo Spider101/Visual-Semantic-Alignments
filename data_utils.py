@@ -14,25 +14,15 @@ from tqdm import *
 import argparse
 import pdb
 
-from skip_thoughts import skipthoughts
+from text_utils import build_vocab
 from model_utils import encode_text
-from config.resources import data_path, METADICT_FNAME
+from config.resources import local_data_path, METADICT_FNAME
 from utils import load_pkl, dump_pkl
-
-'''define sentence encoder and load it with pretrained weights'''
-def build_sent_encoder():
-
-    model = skipthoughts.load_model()
-    return skipthoughts.Encoder(model)
 
 '''build the dataset for the experiments from the metadata dictionary'''
 def build_text_dataset(metadata):
 
     dataset = {}
-
-    #set up the encoder to be used to compute the textual embeddings for
-    #the captions 
-    text_encoder = build_sent_encoder()
 
     #iterate over the items in the metadata
     for idx in trange(len(metadata)):
@@ -60,37 +50,33 @@ def build_text_dataset(metadata):
                 caption = "\b"
 
             captions.append(caption)
-
-        sent_feats = encode_text(text_encoder, captions)
-
-        for reg_idx in trange(len(regions)):
-
-            region_id = str(regions[reg_idx]["region_id"])
-
-            if region_id not in dataset[img_id].keys():
-                dataset[img_id][region_id] = {}
-
-            dataset[img_id][region_id] = {"phrase": regions[reg_idx]["phrase"], 
-                                            "feature": sent_feats[reg_idx, :]}
-
+    
+    #TODO: figure out what to do here
     return dataset             
 
+        
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
 
     parser.add_argument("--op", help="operation to perform")
     parser.add_argument("--modality", default="text", help="the modality to work on")
+    parser.add_argument("--vocab_lim", default=None, help="size of vocabulary to use")
 
     args = parser.parse_args()
+    
+    with open(join(local_data_path, METADICT_FNAME)) as f:
+        meta_dict = json.load(f)
 
     if args.op == "build_dataset":
         
         if args.modality == "text":
             
-            with open(join(data_path, METADICT_FNAME)) as f:
-                meta_dict = json.load(f)
-            
             text_dataset = build_text_dataset(meta_dict)
-            
-            dump_pkl(text_dataset, data_path, "text_feats")
+            dump_pkl(text_dataset, local_data_path, "text_feats")
+    
+    elif args.op == "build_vocab":
+
+        vocab = build_vocab(meta_dict, args.vocab_lim)
+        fname = "vocab_full" if args.vocab_lim is None else "vocab_" + args.vocab_lim
+        dump_pkl(vocab, local_data_path, fname)
