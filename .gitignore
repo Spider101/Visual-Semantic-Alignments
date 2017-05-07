@@ -3,4 +3,5 @@ skip_thoughts/
 config/
 __pycache__/
 decoder_train.py
+*swp
 *pyc
