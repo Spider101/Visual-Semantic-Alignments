@@ -64,7 +64,7 @@ if __name__ == "__main__":
         para_dict = json.load(open(join(data_path, PARA_FNAME)))
         vg_img_dict = json.load(open(join(data_path, VG_REG_FNAME)))
         combined_data = align_datasets(para_dict, vg_img_dict)
-        combined_data_path = join(data_path, METADICT_FNAME)
+        combined_data_path = join(local_data_path, METADICT_FNAME)
         json.dump(combined_data, open(combined_data_path, "w"))
     
     elif args.op == "build_img_dir":
