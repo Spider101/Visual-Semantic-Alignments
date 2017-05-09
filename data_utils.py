@@ -14,34 +14,29 @@ from tqdm import *
 import argparse
 import pdb
 
-from text_utils import build_vocab
+from text_utils import build_vocab, text_to_seq
 from model_utils import encode_text
-from config.resources import local_data_path, METADICT_FNAME
+from config.resources import local_data_path, vocab_dict, METADICT_FNAME
 from utils import load_pkl, dump_pkl
 
 '''build the dataset for the experiments from the metadata dictionary'''
-def build_text_dataset(metadata):
+def build_text_dataset(metadata, vocab, data_split, text_rep="word_level"):
 
-    dataset = {}
+    #extract the word2id dict
+    word2id = vocab["word2id"]
 
     #iterate over the items in the metadata
     for idx in trange(len(metadata)):
         
         #collect relevant metadata from the current item
         regions = metadata[idx]["regions"]
-        img_id = str(metadata[idx]["id"])
         paragraph = metadata[idx]["paragraph"]
         
-        if img_id not in dataset.keys():
-            dataset[img_id] = {}
-
-        captions = []
+        if text_rep == "word_level":
+            captions = []
+        
         #iterate over the regions corresponding to each item (image)
         for reg_idx in trange(len(regions)):
-
-            #make sure the regions belong to the current image
-            if int(img_id) != regions[reg_idx]["image_id"]:
-                pdb.set_trace()
 
             caption = regions[reg_idx]["phrase"]
             
@@ -51,17 +46,17 @@ def build_text_dataset(metadata):
 
             captions.append(caption)
     
-    #TODO: figure out what to do here
-    return dataset             
-
-        
+    sequences = text_to_seq(captions, word2id)
+    train_samples = int((1-data_split)*len(sequences))
+    return {"captions": sequences[:train_samples]}, {"captions": sequences[train_samples:]}             
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
 
     parser.add_argument("--op", help="operation to perform")
     parser.add_argument("--modality", default="text", help="the modality to work on")
-    parser.add_argument("--vocab_lim", default=None, help="size of vocabulary to use")
+    parser.add_argument("--vocab_lim", type=int, default=None, help="size of vocabulary to use")
+    parser.add_argument("--data_split", default=0.2, type=float, help="ratio of train to validation samples")
 
     args = parser.parse_args()
     
@@ -72,11 +67,20 @@ if __name__ == "__main__":
         
         if args.modality == "text":
             
-            text_dataset = build_text_dataset(meta_dict)
-            dump_pkl(text_dataset, local_data_path, "text_feats")
-    
+            vocab_lim = "full" if args.vocab_lim is None else str(args.vocab_lim)
+            vocab_fname = vocab_dict[str(vocab_lim)]
+            assert exists(join(local_data_path, vocab_fname + ".p")), "build vocabulary first"
+            vocab = load_pkl(local_data_path, vocab_fname)
+
+            trainset, valset = build_text_dataset(meta_dict, vocab, args.data_split)
+            train_caps_fname = "train_seq_" + str(args.vocab_lim)
+            val_caps_fname = "val_seq_"  + str(args.vocab_lim)
+
+            dump_pkl(trainset, local_data_path, train_caps_fname)
+            dump_pkl(valset, local_data_path, val_caps_fname)
+
     elif args.op == "build_vocab":
 
         vocab = build_vocab(meta_dict, args.vocab_lim)
-        fname = "vocab_full" if args.vocab_lim is None else "vocab_" + args.vocab_lim
+        fname = "text_vocab_full" if args.vocab_lim is None else "text_vocab_" + str(args.vocab_lim)
         dump_pkl(vocab, local_data_path, fname)

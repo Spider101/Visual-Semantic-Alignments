@@ -65,16 +65,16 @@ def tokenize_words(sents, vocab_lim):
 
     wcounts.sort(key=lambda x: x[1], reverse=True)
     sorted_voc = [wc[0] for wc in wcounts]
-    word2id = dict(list(zip(sorted_voc[:vocab_lim], list(range(2, vocab_lim-1)))))
-    id2word = dict(list(zip(list(range(2, vocab_lim-1)), sorted_voc[:vocab_lim])))
+    word2id = dict(list(zip(sorted_voc[:vocab_lim], list(range(3, vocab_lim-1)))))
+    id2word = dict(list(zip(list(range(3, vocab_lim-1)), sorted_voc[:vocab_lim])))
     
     #add start of sentence token
-    word2id[sos_token] = 1
-    id2word[1] = sos_token
+    word2id[sos_token] = 2
+    id2word[2] = sos_token
 
     #add end of sentence token
-    word2id[eos_token] = 0
-    id2word[0] = eos_token
+    word2id[eos_token] = 1
+    id2word[1] = eos_token
 
     #add unknown word token
     word2id[unk_token] = vocab_lim-1
@@ -106,10 +106,10 @@ def seq_to_texts(sequences, id2word):
 '''convert words to word ids'''
 def text_to_seq(sents, word2id):
 
-    sop_token, eop_token, unk_token = "<sop>", "<eop>", "<unk>"
-    word_ids = [ word2id[sop_token] ]
+    sos_token, eos_token, unk_token = "<sos>", "<eos>", "<unk>"
+    word_ids = [ word2id[sos_token] ]
     
-    for _, sent in sents:
+    for sent in sents:
         
         for word in sent.split():
 
@@ -119,4 +119,4 @@ def text_to_seq(sents, word2id):
                 word_ids.append(word2id[word])
     
     #tack the end of paragraph token at the end of the story and return it
-    return word_ids + [ word2id[eop_token] ]
+    return word_ids + [ word2id[eos_token] ]
