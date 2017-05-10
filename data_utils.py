@@ -9,13 +9,16 @@
 
 from __future__ import print_function
 import json
-from os.path import join, exists
+from os.path import join, exists, normpath, basename
+from os import listdir, mkdir
 from tqdm import *
 import argparse
+import numpy as np
 import pdb
 
 from text_utils import build_vocab, text_to_seq
-from model_utils import encode_text
+from region_builder import read_image, make_crops
+from model_utils import build_feat_extractor, extract_feats
 from config.resources import (local_data_path, vocab_dict, RANDOM_SEED, 
                                 METADICT_FNAME)
 from utils import load_pkl, dump_pkl
@@ -40,7 +43,11 @@ def text_data_gen(data, batch_size=32):
         
         yield batch_feats, batch_labels
 
-'''build the dataset for the experiments from the metadata dictionary'''
+'''generates batches of data for experiments'''
+def data_gen(data, batch_size=32):
+    pass
+
+'''build the dataset for the experiments for the textual modality'''
 def build_text_dataset(metadata, vocab, data_split, text_rep="word_level"):
 
     #extract the word2id dict
@@ -70,6 +77,20 @@ def build_text_dataset(metadata, vocab, data_split, text_rep="word_level"):
     sequences = text_to_seq(captions, word2id)
     train_samples = int((1-data_split)*len(sequences))
     return {"captions": sequences[:train_samples]}, {"captions": sequences[train_samples:]}             
+
+'''build the dataset for the experiments for the visual modality'''
+def build_vis_dataset(metadata):
+   
+    dest_dir = join(local_data_path, "crops")
+    src_dir = join(local_data_path, "images")
+   
+    #make sure the dest dir exists
+    if not exists(dest_dir):
+        mkdir(dest_dir)
+
+    for info in tqdm(metadata, total=len(metadata)):
+        make_crops(str(info["id"]), info["regions"], src_dir, dest_dir)
+
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
@@ -100,6 +121,9 @@ if __name__ == "__main__":
             dump_pkl(trainset, local_data_path, train_caps_fname)
             dump_pkl(valset, local_data_path, val_caps_fname)
 
+        elif args.modality == "vis":
+            build_vis_dataset(metadata)
+    
     elif args.op == "build_vocab":
 
         vocab = build_vocab(meta_dict, args.vocab_lim)
