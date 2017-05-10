@@ -16,8 +16,29 @@ import pdb
 
 from text_utils import build_vocab, text_to_seq
 from model_utils import encode_text
-from config.resources import local_data_path, vocab_dict, METADICT_FNAME
+from config.resources import (local_data_path, vocab_dict, RANDOM_SEED, 
+                                METADICT_FNAME)
 from utils import load_pkl, dump_pkl
+
+'''generates batches of data in the textual modality'''
+def text_data_gen(data, batch_size=32):
+   
+    seed(RANDOM_SEED)
+    captions = data["captions"]
+    
+    nb_captions = len(captions)
+    max_seq_len = max([len(sent) for sent in captions])
+    batch_feats = np.zeros((batch_size, max_seq_len), dtype=int)
+
+    while True:
+
+        for batch_idx in range(batch_size):
+            
+            curr_idx = randint(0, nb_captions)
+            curr_len = len(captions[curr_idx])
+            batch_feats[batch_idx, :curr_len] = captions[curr_idx]
+        
+        yield batch_feats, batch_labels
 
 '''build the dataset for the experiments from the metadata dictionary'''
 def build_text_dataset(metadata, vocab, data_split, text_rep="word_level"):
