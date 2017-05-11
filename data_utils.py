@@ -11,9 +11,11 @@ from __future__ import print_function
 import json
 from os.path import join, exists, normpath, basename
 from os import listdir, mkdir
+from nltk.tokenize import sent_tokenize
 from tqdm import *
 import argparse
 import numpy as np
+from numpy.random import randint, choice
 import pdb
 
 from text_utils import build_vocab, text_to_seq
@@ -44,8 +46,56 @@ def text_data_gen(data, batch_size=32):
         yield batch_feats, batch_labels
 
 '''generates batches of data for experiments'''
-def data_gen(data, batch_size=32):
-    pass
+def data_gen(data, nb_reg=10, nb_feats=4096, batch_size=32):
+    
+    seed(RANDOM_SEED)
+    captions = data["captions"]
+    vis_encoder = build_feat_extractor("vis")
+    
+    nb_captions = len(captions)
+    max_seq_len = max([len(sent) for sent in captions])
+    crop_dir = join(local_data_path, "crops")
+    img_dirs = [ join(crop_dir, fname) for fname in listdir(crop_dir) ]
+
+    batch_vis = np.zeros((batch_size, nb_reg, nb_feats))
+    batch_text = np.zeros((batch_size, max_seq_len), dtype=int)
+
+    while True:
+
+        for batch_idx in range(0, batch_size, 2):
+            
+            #pos samples
+            curr_idx = randint(0, nb_captions)
+            curr_len = len(captions[curr_idx])
+            batch_text[batch_idx, :curr_len] = captions[curr_idx]
+
+            img_dir = join(crop_dir, str(curr_idx))
+            reg_paths = [ join(img_dir, fname) for fname in listdir(img_dir)[:nb_reg] ]
+
+            feat_list = []
+            for reg_path in reg_paths:
+                feat_list.append(extract_feats(reg_path, "vis", vis_encoder)
+            
+            batch_vis[batch_idx, :, :] = np.concatenate(feat_list)
+            batch_labels[batch_idx] =  1
+
+            #neg samples
+            curr_idx = randint(0, nb_captions)
+            curr_len = len(captions[curr_idx])
+            batch_text[batch_idx + 1, :curr_len] = captions[curr_idx]
+            
+            neg_idx = choice(range(curr_idx) + range(curr_idx+1, nb_samples))
+            img_dir = join(crop_dir, str(neg_idx)) 
+            reg_paths = [ join(img_dir, fname) for fname in listdir(img_dir)[:nb_reg] ]
+
+            feat_list = []
+            for reg_path in reg_paths:
+                feat_list.append(extract_feats(reg_path, "vis", vis_encoder)
+            
+            batch_vis[batch_idx + 1, :, :] = np.concatenate(feat_list)
+            batch_labels[batch_idx + 1] =  -1
+
+        yield [batch_text, batch_vis], batch_labels
 
 '''build the dataset for the experiments for the textual modality'''
 def build_text_dataset(metadata, vocab, data_split, text_rep="word_level"):
@@ -53,30 +103,20 @@ def build_text_dataset(metadata, vocab, data_split, text_rep="word_level"):
     #extract the word2id dict
     word2id = vocab["word2id"]
 
+    sequences = []
     #iterate over the items in the metadata
     for idx in trange(len(metadata)):
         
         #collect relevant metadata from the current item
-        regions = metadata[idx]["regions"]
         paragraph = metadata[idx]["paragraph"]
         
         if text_rep == "word_level":
-            captions = []
-        
-        #iterate over the regions corresponding to each item (image)
-        for reg_idx in trange(len(regions)):
+            captions = sent_tokenize(paragraph)
+            sequences.append(text_to_seq(captions, word2id))
 
-            caption = regions[reg_idx]["phrase"]
-            
-            #safety check to prevent blank strings being passed to the encoder
-            if caption.replace(" ", "") == "":
-                caption = "\b"
-
-            captions.append(caption)
-    
-    sequences = text_to_seq(captions, word2id)
     train_samples = int((1-data_split)*len(sequences))
-    return {"captions": sequences[:train_samples]}, {"captions": sequences[train_samples:]}             
+    return {"captions": sequences[:train_samples]}, \
+            {"captions": sequences[train_samples:]}             
 
 '''build the dataset for the experiments for the visual modality'''
 def build_vis_dataset(metadata):

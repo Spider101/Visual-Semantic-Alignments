@@ -111,7 +111,7 @@ def text_to_seq(sents, word2id):
     
     for sent in sents:
         
-        for word in sent.split():
+        for word in word_tokenize(sent):
 
             if word not in word2id:
                 word_ids.append(word2id[unk_token])
