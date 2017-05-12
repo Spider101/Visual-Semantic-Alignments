@@ -10,7 +10,7 @@
 from __future__ import print_function
 from keras.preprocessing import image
 from keras.applications.vgg16 import VGG16, preprocess_input
-from keras.backend as K
+import keras.backend as K
 import numpy as np
 import pdb
 
@@ -47,17 +47,22 @@ def encode_text(encoder, text):
 
     return encoder.encode(text)
 
-def calc_score(t1, t2):
+'''calculate similarity score between modalities based on inner product'''
+def calc_score(x):
 
+    t1, t2 = x
     t2 = K.permute_dimensions(t2, (0, 2, 1))
     outer_prod = K.batch_dot(t1, t2)
     
-    return K.sum(K.maximum(outer_prod, axis=1))
+    return K.expand_dims(K.sum(K.max(outer_prod, axis=2), axis=1), axis=1)
 
-def rank_svm_loss(ytrue, ypred, margin=1):
+'''custom loss function to separate similar and dissimilar pairs'''
+def rank_svm_loss(y_true, y_pred, margin=1.0, batch_size=32):
 
+    nb_samples = 16
     signed = y_pred * y_true 
-    pos = signed[0]
-    neg = signed[1]
-    rank_hinge_loss = K.mean( K.relu( margin - pos - neg ), axis=-1)
-    return rank_hinge_loss
+    pos = signed[:nb_samples]
+    neg = signed[nb_samples:]
+    rank_hinge_loss = K.relu( margin - pos - neg )
+
+    return K.concatenate([rank_hinge_loss, rank_hinge_loss], axis=0)
