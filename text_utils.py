@@ -10,6 +10,7 @@
 from __future__ import print_function
 from nltk.tokenize import word_tokenize, sent_tokenize
 from tqdm import *
+import pdb
 
 '''builds vocabulary from captions in dataset'''
 def build_vocab(metadata, vocab_lim):
@@ -120,3 +121,8 @@ def text_to_seq(sents, word2id):
     
     #tack the end of paragraph token at the end of the story and return it
     return word_ids + [ word2id[eos_token] ]
+
+'''return the length of the longest sequence in a list of sequences'''
+def get_max_len(seqs):
+
+    return max([len(seq["text"]) for seq in seqs])
