@@ -31,7 +31,7 @@ def full_model(vocab_size, max_len, embed_size, nb_hidden_states,
     text_input = Input(batch_shape=(None, max_len))
     embedded = Embedding(vocab_size, embed_size, mask_zero=True)(text_input)
     blstm = Bidirectional(LSTM(nb_hidden_states, return_sequences=True))(embedded)
-    text_out = TimeDistributed(Dense(common_dim))(blstm)
+    text_out = TimeDistributed(Dense(common_dim, activation="relu"))(blstm)
 
     vis_input = Input(batch_shape=(None, nb_regs, nb_feats))
     vis_out = TimeDistributed(Dense(common_dim))(vis_input)
