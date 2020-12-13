@@ -28,28 +28,41 @@ def unpack_archive(archive_path, dataset_name, path_to_save_location):
 
     print('Downloaded and unpacked data for Region Description Metadata')
 
+def show_datasets_in_folder(path_to_folder):
+    print('\nDownloaded and unpacked metadata files so far:')
+    for idx, file_path in enumerate(listdir(path_to_folder)):
+        print('{}. {}'.format(idx + 1, path.join(path_to_folder, file_path)))
+
+def make_image_paragraphs_dataset():
+    image_para_metadata_url = input("Enter URL for downloading image paragraphs metadata: ")
+
+    path_to_save_image_para_metadata = path.join(path_to_external_data, 'paragraphs_v1.json.zip')
+
+    # build image paragraphs metadata dataset
+    image_paragraphs_metadata_name = 'Image Paragraphs Metadata'
+    download_from_url(image_para_metadata_url, image_paragraphs_metadata_name, path_to_save_image_para_metadata)
+    unpack_archive(path_to_save_image_para_metadata, image_paragraphs_metadata_name, path_to_external_data)
+
+    show_datasets_in_folder(path_to_external_data)
+
 def make_visual_genome_dataset():
     region_desc_metadata_url = input("Enter URL for downloading region description metadata: ")
     image_metadata_url = input("Enter URL for downloading image metadata: ")
 
-    path_to_save_data = path.join(path_to_external_data)
     path_to_save_region_desc_metadata = path.join(path_to_external_data, 'region_desc_metadata.json.zip')
     path_to_save_image_metadata = path.join(path_to_external_data, 'image_metadata.json.zip')
 
     # build region descriptions metadata dataset
-    region_desc_metadata_dataset_name = 'Region Description Metadata'
-    download_from_url(region_desc_metadata_url, region_desc_metadata_dataset_name, path_to_save_region_desc_metadata)
-    unpack_archive(path_to_save_region_desc_metadata, region_desc_metadata_dataset_name, path_to_save_data)
+    region_desc_metadata_name = 'Region Description Metadata'
+    download_from_url(region_desc_metadata_url, region_desc_metadata_name, path_to_save_region_desc_metadata)
+    unpack_archive(path_to_save_region_desc_metadata, region_desc_metadata_name, path_to_external_data)
 
     # build image metadata dataset
-    image_metadata_dataset_name = 'Image Metadata'
-    download_from_url(image_metadata_url, image_metadata_dataset_name, path_to_save_image_metadata)
-    unpack_archive(path_to_save_image_metadata, image_metadata_dataset_name, path_to_save_data)
+    image_metadata_name = 'Image Metadata'
+    download_from_url(image_metadata_url, image_metadata_name, path_to_save_image_metadata)
+    unpack_archive(path_to_save_image_metadata, image_metadata_name, path_to_external_data)
 
-    print('\nDownloaded and unpacked data for Region Description and Image Metadata in the following locations:')
-    for idx, file_path in enumerate(listdir(path_to_save_data)):
-        print('{}. {}'.format(idx + 1, path.join(path_to_save_data, file_path)))
-
+    show_datasets_in_folder(path_to_external_data)
 
 
 if __name__ == "__main__":
@@ -62,3 +75,6 @@ if __name__ == "__main__":
 
     if args.dataset == "visual_genome":
         make_visual_genome_dataset()
+
+    elif args.dataset == "image_paragraphs":
+        make_image_paragraphs_dataset()
