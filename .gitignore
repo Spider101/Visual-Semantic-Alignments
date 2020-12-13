@@ -5,3 +5,6 @@ __pycache__/
 decoder_train.py
 *swp
 *pyc
+*.code-workspace
+.vscode
+requirements.txt
