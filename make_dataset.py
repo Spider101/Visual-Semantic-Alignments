@@ -4,16 +4,16 @@ import shutil
 from os import path, remove, listdir
 from tqdm import tqdm
 
-from config.resources import local_data_path
+from config.resources import path_to_external_data
 
 
 def make_visual_genome_dataset():
     region_desc_metadata_url = input("Enter URL for downloading region description metadata: ")
     image_metadata_url = input("Enter URL for downloading image metadata: ")
 
-    path_to_save_data = path.join(local_data_path, 'raw')
-    path_to_save_region_desc_metadata = path.join(local_data_path, 'raw', 'region_desc_metadata.json.zip')
-    path_to_save_image_metadata = path.join(local_data_path, 'raw', 'image_metadata.json.zip')
+    path_to_save_data = path.join(path_to_external_data)
+    path_to_save_region_desc_metadata = path.join(path_to_external_data, 'region_desc_metadata.json.zip')
+    path_to_save_image_metadata = path.join(path_to_external_data, 'image_metadata.json.zip')
 
     print('\nStarting download of region descriptions metadata zip file...')
     region_metadata_response = requests.get(region_desc_metadata_url, stream=True)
